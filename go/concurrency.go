@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
-	"math/rand"
 	"time"
 )
 
@@ -17,7 +16,7 @@ func addFactToChannel(client http.Client, url string, t int, ch chan CatFact) {
 		return
 	}
 	ch <- f
-} 
+}
 
 func getFact(client http.Client, url string, t int) (CatFact, error) {
 	f := CatFact{}
@@ -37,7 +36,7 @@ func getFact(client http.Client, url string, t int) (CatFact, error) {
 		defer res.Body.Close()
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return f, err
 	}
@@ -57,14 +56,12 @@ type CatFact struct {
 func main() {
 	n := 5
 	url := "https://catfact.ninja/fact"
-	client := http.Client{ Timeout: 5 * time.Second }
-	r := rand.New(rand.NewSource(3))
+	client := http.Client{Timeout: 5 * time.Second}
 	ch := make(chan CatFact)
-	timings := make([]int, n)
-	
+	timings := []int{730, 306, 1034, 2843, 1790}
+
 	start := time.Now()
 	for i := 0; i < n; i++ {
-		timings[i] = int(r.Float64() * 3000)
 		a, err := getFact(client, url, timings[i])
 		if err != nil {
 			log.Fatal(err)
@@ -72,7 +69,7 @@ func main() {
 			fmt.Println(a.Fact)
 		}
 	}
-	fmt.Printf("Time was %v\n", time.Since(start))
+	fmt.Printf("Serial execution time: %v\n", time.Since(start))
 	start = time.Now()
 
 	for i := 0; i < n; i++ {
@@ -80,9 +77,9 @@ func main() {
 	}
 
 	for i := 0; i < n; i++ {
-		a := <- ch
+		a := <-ch
 		fmt.Println(a.Fact)
 	}
-	fmt.Printf("Time was %v\n", time.Since(start))
+	fmt.Printf("Concurrent execution time: %v\n", time.Since(start))
 
 }
