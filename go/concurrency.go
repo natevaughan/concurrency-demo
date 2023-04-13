@@ -81,5 +81,4 @@ func main() {
 		fmt.Println(a.Fact)
 	}
 	fmt.Printf("Concurrent execution time: %v\n", time.Since(start))
-
 }
